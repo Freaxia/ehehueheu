@@ -28,37 +28,25 @@ subtitle: function(data) {
 },
 
 //---------------------------------------------------------------------
-// DBM Mods Manager Variables (Optional but nice to have!)
-//
-// These are variables that DBM Mods Manager uses to show information
-// about the mods for people to see in the list.
-//---------------------------------------------------------------------
+	 // DBM Mods Manager Variables (Optional but nice to have!)
+	 //
+	 // These are variables that DBM Mods Manager uses to show information
+	 // about the mods for people to see in the list.
+	 //---------------------------------------------------------------------
 
-// Who made the mod (If not set, defaults to "DBM Mods")
-author: "DBM, General Wrex, Lasse & NetLuis",
+	 // Who made the mod (If not set, defaults to "DBM Mods")
+	 author: "DBM",
 
-// The version of the mod (Defaults to 1.0.0)
-version: "1.9.4", //Added in 1.9.4
+	 // The version of the mod (Defaults to 1.0.0)
+	 version: "1.8.2",
 
-// A short description to show on the mod line for this mod (Must be on a single line)
-short_description: "Added If Message Delivery Fails option.",
+	 // A short description to show on the mod line for this mod (Must be on a single line)
+	 short_description: "Changed Category",
 
-// If it depends on any other mods by name, ex: WrexMODS if the mod uses something from WrexMods
+	 // If it depends on any other mods by name, ex: WrexMODS if the mod uses something from WrexMods
 
 
-//---------------------------------------------------------------------
-
-//---------------------------------------------------------------------
-// Action Storage Function
-//
-// Stores the relevant variable info for the editor.
-//---------------------------------------------------------------------
-
-variableStorage: function(data, varType) {
-	const type = parseInt(data.storage3);
-	if(type !== varType) return;
-	return ([data.varName3, 'Message']);
-},
+	 //---------------------------------------------------------------------
 
 //---------------------------------------------------------------------
 // Action Fields
@@ -68,7 +56,7 @@ variableStorage: function(data, varType) {
 // are also the names of the fields stored in the action's JSON data.
 //---------------------------------------------------------------------
 
-fields: ["storage", "varName", "channel", "varName2", "storage3", "varName3"],
+fields: ["storage", "varName", "channel", "varName2"],
 
 //---------------------------------------------------------------------
 // Command HTML
@@ -88,7 +76,6 @@ fields: ["storage", "varName", "channel", "varName2", "storage3", "varName3"],
 
 html: function(isEvent, data) {
 	return `
-<div><p>This action has been modified by DBM Mods.</p></div><br>
 <div>
 	<div style="float: left; width: 35%;">
 		Source Embed Object:<br>
@@ -110,28 +97,7 @@ html: function(isEvent, data) {
 <div id="varNameContainer2" style="display: none; float: right; width: 60%;">
 	Variable Name:<br>
 	<input id="varName2" class="round" type="text" list="variableList"><br>
-</div><br><br><br><br>
-<div style="float: left; width: 35%;">
-Store Message Object In:<br>
-	<select id="storage3" class="round" onchange="glob.variableChange(this, 'varNameContainer3')">
-		${data.variables[0]}
-	</select>
-</div>	
-<div id="varNameContainer3" style="display: ; float: right; width: 60%;">
-	Storage Variable Name:<br>
-	<input id="varName3" class="round" type="text">
-	</div><br><br><br>
-	<div style="padding-top: 8px;">
-			<div style="float: left; width: 35%;">
-				If Message Delivery Fails:<br>
-				<select id="iffalse" class="round" onchange="glob.onChangeFalse(this)">
-					<option value="0" selected>Continue Actions</option>
-					<option value="1">Stop Action Sequence</option>
-					<option value="2">Jump To Action</option>
-					<option value="3">Skip Next Actions</option>
-			 </select>
-			</div>
-			<div id="iffalseContainer" style="display: none; float: right; width: 60%;"><span id="iffalseName">Action Number</span>:<br><input id="iffalseVal" class="round" type="text"></div>`;
+</div>`
 },
 
 //---------------------------------------------------------------------
@@ -145,9 +111,7 @@ Store Message Object In:<br>
 init: function() {
 	const {glob, document} = this;
 
-	glob.sendTargetChange(document.getElementById('channel'), 'varNameContainer2');
-	glob.variableChange(document.getElementById('storage3'), 'varNameContainer3');
-	glob.onChangeFalse(document.getElementById('iffalse'));
+	glob.sendTargetChange(document.getElementById('channel'), 'varNameContainer2')
 },
 
 //---------------------------------------------------------------------
@@ -172,23 +136,14 @@ action: function(cache) {
 	const msg = cache.msg;
 	const channel = parseInt(data.channel);
 	const varName2 = this.evalMessage(data.varName2, cache);
-	const varName3 = this.evalMessage(data.varName3, cache);
-	const storage3 = parseInt(data.storage3);
 	const target = this.getSendTarget(channel, varName2, cache);
-	
 	if(target && target.send) {
 		try {
-			target.send({embed}).then(function(message) {                 
-				if(message && varName3) this.storeValue(message, storage3, varName3, cache);
+			target.send({embed}).then(function() {
 				this.callNextAction(cache);
-			}.bind(this)).catch(err => {
-				if(err.message == ('Cannot send messages to this user')) {
-					this.executeResults(false, data, cache);
-				} else {
-				this.displayError.bind(this, data, cache)}
-			});
-		} catch (e) {
-			this.displayError(data, cache, e)
+			}.bind(this)).catch(this.displayError.bind(this, data, cache));
+		} catch(e) {
+			this.displayError(data, cache, e);
 		}
 	} else {
 		this.callNextAction(cache);
